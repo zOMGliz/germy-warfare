@@ -1513,8 +1513,9 @@ class Antibody {
       this.alive = false;
       return;
     }
-    const vx = (dx / dist) * this.speed;
-    const vy = (dy / dist) * this.speed;
+    const step = dt * 60;
+    const vx = (dx / dist) * this.speed * step;
+    const vy = (dy / dist) * this.speed * step;
     this.x += vx;
     this.y += vy;
     this.trail.push({ x: this.x, y: this.y });
@@ -1594,9 +1595,10 @@ class Cell {
     this.pulsePhase += dt * 2;
     this.wobblePhase += dt * 0.8;
 
-    // Drift
-    this.x += this.vx;
-    this.y += this.vy;
+    // Drift (normalize to 60fps)
+    const step = dt * 60;
+    this.x += this.vx * step;
+    this.y += this.vy * step;
 
     // Soft bounce off walls
     const margin = this.r + 10;
@@ -1606,8 +1608,8 @@ class Cell {
     if (this.y > H - margin) { this.y = H - margin; this.vy = -Math.abs(this.vy) * 0.8; }
 
     // Gentle random walk
-    this.vx += (Math.random() - 0.5) * 0.08;
-    this.vy += (Math.random() - 0.5) * 0.08;
+    this.vx += (Math.random() - 0.5) * 0.08 * step;
+    this.vy += (Math.random() - 0.5) * 0.08 * step;
 
     // macrophage seeking behavior: hunt infected fibroblasts
     if (this.type === 'macrophage' && gameRunning) {
@@ -1627,8 +1629,8 @@ class Cell {
           }
         }
         if (closestInf && closestDist > 0) {
-          this.vx += ((closestInf.x - this.x) / closestDist) * seekStr;
-          this.vy += ((closestInf.y - this.y) / closestDist) * seekStr;
+          this.vx += ((closestInf.x - this.x) / closestDist) * seekStr * step;
+          this.vy += ((closestInf.y - this.y) / closestDist) * seekStr * step;
         }
       }
     }
@@ -1650,8 +1652,8 @@ class Cell {
         }
       }
       if (closestInf && closestDist > 0) {
-        this.vx += ((closestInf.x - this.x) / closestDist) * seekStr;
-        this.vy += ((closestInf.y - this.y) / closestDist) * seekStr;
+        this.vx += ((closestInf.x - this.x) / closestDist) * seekStr * step;
+        this.vy += ((closestInf.y - this.y) / closestDist) * seekStr * step;
       }
     }
 
@@ -1921,7 +1923,7 @@ class FloatingText {
     this.vy = -1.5;
   }
   update(dt) {
-    this.y += this.vy;
+    this.y += this.vy * dt * 60;
     this.life -= dt * 1.2;
   }
   draw(ctx) {
